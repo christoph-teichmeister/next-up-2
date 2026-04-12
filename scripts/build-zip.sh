@@ -24,6 +24,8 @@ gnome-extensions pack "$ROOT_DIR" \
   --force \
   --out-dir "$DIST_DIR" \
   --extra-source src \
-  --extra-source assets
+  --extra-source assets \
+  --extra-source README.md \
+  --extra-source LICENSE.md
 
 echo "Created $DIST_DIR/$UUID.shell-extension.zip"
