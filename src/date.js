@@ -87,7 +87,7 @@ export function getNextEventsToDisplay(todaysEvents) {
   };
 }
 
-export function eventStatusToIndicatorText(eventStatus, textFormat) {
+export function eventStatusToIndicatorText(eventStatus, textFormat, customFormats) {
   function displayNextEvent(event) {
     const summary = getEventSummary(event);
 
@@ -143,6 +143,32 @@ export function eventStatusToIndicatorText(eventStatus, textFormat) {
     return `Ends in ${endsInText}: ${currentSummary} — Next: ${nextSummary} at ${timeText}`;
   }
 
+  function displayCustom(currentEvent, nextEvent) {
+    const values = {};
+    let template = customFormats.none;
+
+    if (currentEvent != null) {
+      values.current = getEventSummary(currentEvent);
+      values.ends_in = getTimeToEventAsText(currentEvent.end);
+      template = customFormats.current;
+    }
+
+    if (nextEvent != null) {
+      values.next = getEventSummary(nextEvent);
+      values.next_time = isAllDayEvent(nextEvent)
+        ? "All day"
+        : getTimeOfEventAsText(nextEvent.date);
+      values.starts_in = getTimeToEventAsText(nextEvent.date);
+      template =
+        currentEvent != null ? customFormats.currentNext : customFormats.next;
+    }
+
+    // Unknown placeholders are left as-is
+    return template.replace(/\{(\w+)\}/g, (match, key) =>
+      key in values ? values[key] : match
+    );
+  }
+
   function displayCurrentEvent(event) {
     if (isAllDayEvent(event)) {
       return `All day: ${getEventSummary(event)}`;
@@ -158,6 +184,10 @@ export function eventStatusToIndicatorText(eventStatus, textFormat) {
   }
 
   const { currentEvent, nextEvent } = eventStatus;
+
+  if (textFormat === 2) {
+    return displayCustom(currentEvent, nextEvent);
+  }
 
   if (currentEvent != null) {
     if (nextEvent != null) {

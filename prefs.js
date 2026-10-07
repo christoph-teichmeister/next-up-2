@@ -41,7 +41,7 @@ export default class NextUpExtensionPreferences extends ExtensionPreferences {
     group.add(textRow);
 
     const textDropdown = new Gtk.DropDown({
-      model: Gtk.StringList.new([_("Don't show (old)"), _("Show")]),
+      model: Gtk.StringList.new([_("Don't show (old)"), _("Show"), _("Custom")]),
       valign: Gtk.Align.CENTER,
     });
 
@@ -67,6 +67,31 @@ export default class NextUpExtensionPreferences extends ExtensionPreferences {
       "active",
       Gio.SettingsBindFlags.DEFAULT
     );
+
+    const customGroup = new Adw.PreferencesGroup({
+      title: _("Custom format"),
+      description: _(
+        "Placeholders: {current}, {ends_in}, {next}, {next_time}, {starts_in}"
+      ),
+    });
+    page.add(customGroup);
+
+    for (const [key, title] of [
+      ["custom-format-current-next", _("During an event, with one up next")],
+      ["custom-format-current", _("During the last event of the day")],
+      ["custom-format-next", _("Before the next event")],
+      ["custom-format-none", _("No more events today")],
+    ]) {
+      const row = new Adw.EntryRow({ title, show_apply_button: true });
+      customGroup.add(row);
+      settings.bind(key, row, "text", Gio.SettingsBindFlags.DEFAULT);
+    }
+
+    const updateCustomGroupVisibility = () => {
+      customGroup.visible = settings.get_int("text-format") === 2;
+    };
+    settings.connect("changed::text-format", updateCustomGroupVisibility);
+    updateCustomGroupVisibility();
 
     window.add(page);
   }

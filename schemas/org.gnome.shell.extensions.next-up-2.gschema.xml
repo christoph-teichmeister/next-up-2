@@ -8,6 +8,18 @@
     <key name="text-format" type="i">
       <default>1</default>
     </key>
+    <key name="custom-format-current-next" type="s">
+      <default>"Ends in {ends_in}: {current} — Next: {next} at {next_time}"</default>
+    </key>
+    <key name="custom-format-current" type="s">
+      <default>"Ends in {ends_in}: {current}"</default>
+    </key>
+    <key name="custom-format-next" type="s">
+      <default>"In {starts_in}: {next} at {next_time}"</default>
+    </key>
+    <key name="custom-format-none" type="s">
+      <default>"Done for today!"</default>
+    </key>
     <key name="show-all-day-events" type="b">
       <default>false</default>
     </key>
