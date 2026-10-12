@@ -210,7 +210,7 @@ function getTimeOfEventAsText(eventDate) {
   const hrs = eventDate.getHours();
   let mins = eventDate.getMinutes().toString();
 
-  mins = mins.padEnd(2, "0"); // Show e.g. 11am as 11:00 instead of 11:0
+  mins = mins.padStart(2, "0"); // Show e.g. 11:05 instead of 11:5
 
   const time = `${hrs}:${mins}`;
   return time;

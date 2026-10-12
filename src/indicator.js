@@ -20,11 +20,30 @@ export default class Indicator extends PanelMenu.Button {
 
     this._loadGUI();
     this._initialiseMenu();
+
+    // GNOME 50+ adds a menu gesture that would also handle our clicks.
+    if (this._clickGesture) {
+      this._clickGesture.set_enabled(false);
+      this._calendarClickGesture = new Clutter.ClickGesture();
+      this._calendarClickGesture.connect("recognize", (gesture) => {
+        this._activate(gesture.get_button());
+      });
+      this.add_action(this._calendarClickGesture);
+    }
+  }
+
+  _onDestroy() {
+    if (this._calendarClickGesture) {
+      this.remove_action(this._calendarClickGesture);
+      this._calendarClickGesture = null;
+    }
+    this._calendarSource.destroy();
+    this._calendarSource = null;
+    super._onDestroy();
   }
 
   _loadGUI() {
     this._menuLayout = new St.BoxLayout({
-      vertical: false,
       clip_to_allocation: true,
       x_align: Clutter.ActorAlign.START,
       y_align: Clutter.ActorAlign.CENTER,
@@ -72,22 +91,33 @@ export default class Indicator extends PanelMenu.Button {
     this.icon.set_gicon(this._confettiGicon);
   }
 
+  _activate(button) {
+    if (button === Clutter.BUTTON_PRIMARY || button === 0) {
+      // Show calendar on left click or touch.
+      if (this.menu.isOpen) {
+        this.menu._getTopMenu().close();
+      } else {
+        Main.panel.toggleCalendar();
+      }
+    } else {
+      // Show settings menu on right click.
+      this.menu.toggle();
+    }
+  }
+
   vfunc_event(event) {
+    if (this._calendarClickGesture) {
+      return Clutter.EVENT_PROPAGATE;
+    }
+
     if (
       event.type() == Clutter.EventType.TOUCH_END ||
       event.type() == Clutter.EventType.BUTTON_RELEASE
     ) {
-      if (event.get_button() === Clutter.BUTTON_PRIMARY) {
-        // Show calendar on left click
-        if (this.menu.isOpen) {
-          this.menu._getTopMenu().close();
-        } else {
-          Main.panel.toggleCalendar();
-        }
-      } else {
-        // Show settings menu on right click
-        this.menu.toggle();
-      }
+      const button = event.type() === Clutter.EventType.TOUCH_END
+        ? Clutter.BUTTON_PRIMARY
+        : event.get_button();
+      this._activate(button);
     }
 
     return Clutter.EVENT_PROPAGATE;

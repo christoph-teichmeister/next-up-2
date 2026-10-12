@@ -30,7 +30,6 @@ const IndicatorInstance = GObject.registerClass(Indicator);
 
 export default class NextUpExtension extends Extension {
   enable() {
-
     this._indicator = new IndicatorInstance({
       confettiGicon: Gio.icon_new_for_string(
         this.path + "/assets/party-popper.png"
@@ -42,8 +41,10 @@ export default class NextUpExtension extends Extension {
     this._settingChangedSignal = this._settings.connect(
       "changed::which-panel",
       () => {
-        this.unloadIndicator();
-        this.loadIndicator();
+        if (this._indicator.container.get_parent()) {
+          this.unloadIndicator();
+          this.loadIndicator();
+        }
       }
     );
 
@@ -53,10 +54,11 @@ export default class NextUpExtension extends Extension {
       GLib.PRIORITY_DEFAULT,
       3,
       () => {
+        this.delaySourceId = null;
         this.loadIndicator();
         this._startLoop();
 
-        return false;
+        return GLib.SOURCE_REMOVE;
       }
     );
   }
@@ -89,9 +91,10 @@ export default class NextUpExtension extends Extension {
   }
 
   unloadIndicator() {
-    this._indicator.container
-      .get_parent()
-      .remove_child(this._indicator.container);
+    const parent = this._indicator.container.get_parent();
+    if (parent) {
+      parent.remove_child(this._indicator.container);
+    }
   }
 
   refreshIndicator() {
@@ -125,14 +128,6 @@ export default class NextUpExtension extends Extension {
   }
 
   disable() {
-    Main.panel._centerBox.remove_child(this._indicator.container);
-
-    this._settings.disconnect(this._settingChangedSignal);
-    this._settings = null;
-
-    this._indicator.destroy();
-    this._indicator = null;
-
     if (this.sourceId) {
       GLib.Source.remove(this.sourceId);
       this.sourceId = null;
@@ -142,5 +137,13 @@ export default class NextUpExtension extends Extension {
       GLib.Source.remove(this.delaySourceId);
       this.delaySourceId = null;
     }
+
+    this._settings.disconnect(this._settingChangedSignal);
+    this._settingChangedSignal = null;
+    this._settings = null;
+
+    this.unloadIndicator();
+    this._indicator.destroy();
+    this._indicator = null;
   }
 }
