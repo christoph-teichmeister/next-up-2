@@ -103,9 +103,16 @@ export default class NextUpExtension extends Extension {
     const eventStatus =
       DateHelperFunctions.getNextEventsToDisplay(todaysEvents);
     const textFormat = this._settings.get_int("text-format");
+    const customFormats = {
+      currentNext: this._settings.get_string("custom-format-current-next"),
+      current: this._settings.get_string("custom-format-current"),
+      next: this._settings.get_string("custom-format-next"),
+      none: this._settings.get_string("custom-format-none"),
+    };
     const text = DateHelperFunctions.eventStatusToIndicatorText(
       eventStatus,
-      textFormat
+      textFormat,
+      customFormats
     );
 
     if (eventStatus.currentEvent === null && eventStatus.nextEvent === null) {
